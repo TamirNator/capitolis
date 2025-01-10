@@ -4,8 +4,11 @@ from flask import make_response
 
 
 def root_dir():
-    """ Returns root director for this project """
-    return os.path.dirname(os.path.realpath(__file__ + '/..'))
+    """
+    Returns the root directory for this project.
+    Useful for locating files relative to the project root.
+    """
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 
 def nice_json(arg):
