@@ -1,0 +1,42 @@
+jenkins:
+  systemMessage: "Jenkins configured by JCasC"
+  numExecutors: 2
+  scmCheckoutRetryCount: 2
+  mode: NORMAL
+
+unclassified:
+  location:
+    url: "http://jenkins.example.com/"
+  githubPluginConfig:
+    configs:
+      - name: "GitHub"
+        apiUrl: "https://api.github.com"
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              id: "github-credentials"
+              description: "GitHub Access"
+              username: "your-github-username"
+              password: "your-github-token"
+
+kubernetes:
+  name: "kubernetes"
+  templates:
+    - name: "jenkins-agent"
+      label: "jenkins-agent"
+      yaml: |
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: jnlp
+            image: jenkins/inbound-agent:latest
+            args: ['\$(JENKINS_SECRET)', '\$(JENKINS_NAME)']
+          - name: docker
+            image: docker:latest
+            command:
+            - cat
+            tty: true

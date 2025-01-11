@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+    environment {
+        AWS_REGION = 'us-east-1'
+        ACCOUNT_ID = '<account-id>'
+    }
+    stages {
+        stage('Identify Changes') {
+            steps {
+                script {
+                    def changes = sh(
+                        script: "git diff --name-only HEAD~1 HEAD | awk -F'/' '{print \$1\"/\"\$2}' | sort -u",
+                        returnStdout: true
+                    ).trim().split('\n')
+
+                    env.CHANGED_SERVICES = changes.findAll { it.startsWith('services/') }
+                    echo "Changed services: ${env.CHANGED_SERVICES}"
+                }
+            }
+        }
+        stage('Build, Push, and Deploy') {
+            when {
+                expression { env.CHANGED_SERVICES?.size() > 0 }
+            }
+            steps {
+                script {
+                    env.CHANGED_SERVICES.each { serviceDir ->
+                        def serviceName = serviceDir.tokenize('/')[1]
+                        echo "Processing service: ${serviceName}"
+
+                        // Create ECR Repository if not exists
+                        sh """
+                            aws ecr describe-repositories --region $AWS_REGION --repository-names ${serviceName} || \
+                            aws ecr create-repository --region $AWS_REGION --repository-name ${serviceName} --image-scanning-configuration scanOnPush=true
+                        """
+
+                        // Authenticate Docker with ECR
+                        sh """
+                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                        """
+
+                        // Build and Push Docker Image
+                        sh """
+                            docker build -t $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${serviceName}:latest ${serviceDir}
+                            docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${serviceName}:latest
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
