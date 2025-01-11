@@ -8,16 +8,13 @@ resource "helm_release" "jenkins" {
     name = "persistence.storageClass"
     value = "gp2"
   }
-  # Mount JCasC configuration
-#   set {
-#     name  = "controller.JCasC.configScripts.jenkins"
-#     value = file("${path.module}/../jenkins-config/casc.yaml")
-#   }
 
   # Install Jenkins plugins
   set_list {
     name  = "controller.installPlugins"
     value = [
+      "amazon-ecr:1.7",
+      "aws-credentials",
       "kubernetes",
       "workflow-aggregator",
       "github",
@@ -42,6 +39,7 @@ resource "helm_release" "nginx_ingress" {
     value = "LoadBalancer"
   }
 }
+
 
 resource "helm_release" "argocd" {
   name       = "argocd"

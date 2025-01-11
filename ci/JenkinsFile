@@ -1,49 +1,31 @@
 pipeline {
     agent any
-    environment {
-        AWS_REGION = 'us-east-1'
-        ACCOUNT_ID = '<account-id>'
-    }
     stages {
-        stage('Identify Changes') {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Build Docker Image') {
             steps {
                 script {
-                    def changes = sh(
-                        script: "git diff --name-only HEAD~1 HEAD | awk -F'/' '{print \$1\"/\"\$2}' | sort -u",
-                        returnStdout: true
-                    ).trim().split('\n')
+                    def ecrRepo = "508058148115.dkr.ecr.us-east-1.amazonaws.com/${JOB_NAME}"
+                    def imageTag = "latest"
 
-                    env.CHANGED_SERVICES = changes.findAll { it.startsWith('services/') }
-                    echo "Changed services: ${env.CHANGED_SERVICES}"
+                    docker.build("${ecrRepo}:${imageTag}")
                 }
             }
         }
-        stage('Build, Push, and Deploy') {
-            when {
-                expression { env.CHANGED_SERVICES?.size() > 0 }
-            }
+        stage('Push to ECR') {
             steps {
-                script {
-                    env.CHANGED_SERVICES.each { serviceDir ->
-                        def serviceName = serviceDir.tokenize('/')[1]
-                        echo "Processing service: ${serviceName}"
+                withAWS(region: 'us-east-1', credentials: 'aws-credentials') {
+                    script {
+                        def ecrRepo = "your-account-id.dkr.ecr.us-east-1.amazonaws.com/${JOB_NAME}"
+                        def imageTag = "latest"
 
-                        // Create ECR Repository if not exists
-                        sh """
-                            aws ecr describe-repositories --region $AWS_REGION --repository-names ${serviceName} || \
-                            aws ecr create-repository --region $AWS_REGION --repository-name ${serviceName} --image-scanning-configuration scanOnPush=true
-                        """
-
-                        // Authenticate Docker with ECR
-                        sh """
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-                        """
-
-                        // Build and Push Docker Image
-                        sh """
-                            docker build -t $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${serviceName}:latest ${serviceDir}
-                            docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${serviceName}:latest
-                        """
+                        docker.withRegistry("https://${ecrRepo}") {
+                            docker.image("${ecrRepo}:${imageTag}").push()
+                        }
                     }
                 }
             }

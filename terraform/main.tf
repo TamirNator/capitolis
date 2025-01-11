@@ -30,7 +30,7 @@ module "eks" {
   subnet_ids               = module.vpc.private_subnets
 
   eks_managed_node_group_defaults = {
-    instance_types = ["t3.medium"]
+    instance_types = ["t3.large"]
     key_name       = "cinema"
   }
   node_iam_role_additional_policies = {
@@ -45,7 +45,7 @@ module "eks" {
       max_size = 5
       desired_size = 1
       iam_role_additional_policies = {
-        "CreateVolumePolicy" = aws_iam_policy.eks_policy.arn
+        "EKSPolicy" = aws_iam_policy.eks_policy.arn
       }
     }
   }

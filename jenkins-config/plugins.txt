@@ -1,7 +1,0 @@
-kubernetes
-workflow-aggregator
-github
-github-branch-source
-pipeline-stage-view
-git
-configuration-as-code
