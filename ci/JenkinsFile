@@ -9,9 +9,6 @@ pipeline {
                   - name: docker
                     image: '508058148115.dkr.ecr.us-east-1.amazonaws.com/jenkins:latest'
                     tty: true
-                  - name: docker
-                    image: docker:latest
-                    tty: true
                     volumeMounts:
                     - mountPath: /var/run/docker.sock
                       name: docker-sock
