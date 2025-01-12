@@ -1,57 +1,31 @@
 pipeline {
     agent {
         kubernetes {
-            yaml '''
-                apiVersion: v1
-                kind: Pod
-                spec:
-                  containers:
-                  - name: docker
-                    image: 508058148115.dkr.ecr.us-east-1.amazonaws.com/jenkins:latest
-                    command:
-                    - /usr/bin/bash
-                    - -c
-                    args:
-                    - while true; do sleep 30; done
-                    tty: true
-                    volumeMounts:
-                    - mountPath: /var/run/docker.sock
-                      name: docker-sock
-                  volumes:
-                  - name: docker-sock
-                    hostPath:
-                      path: /var/run/docker.sock   
-                '''
-            }
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: docker
+    image: 508058148115.dkr.ecr.us-east-1.amazonaws.com/jenkins:latest
+    tty: true
+    volumeMounts:
+    - name: docker-sock
+      mountPath: /var/run/docker.sock
+  volumes:
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
+      type: Socket
+            """
         }
+    }
     stages {
-        stage('Checkout Code') {
-            steps {
-                checkout scm
-            }
-        }
         stage('Build Docker Image') {
             steps {
-                script {
-                    def ecrRepo = "508058148115.dkr.ecr.us-east-1.amazonaws.com/${JOB_NAME}"
-                    def imageTag = "latest"
-                    echo "Building ${ecrRepo}:${imageTag}"
-                    docker
-                    docker.build("${ecrRepo}:${imageTag}")
-                }
-            }
-        }
-        stage('Push to ECR') {
-            steps {
-                withAWS(region: 'us-east-1', credentials: 'aws-credentials') {
-                    script {
-                        def ecrRepo = "your-account-id.dkr.ecr.us-east-1.amazonaws.com/${JOB_NAME}"
-                        def imageTag = "latest"
-                        echo "Psuing ${ecrRepo}:${imageTag}"
-                        docker.withRegistry("https://${ecrRepo}") {
-                            docker.image("${ecrRepo}:${imageTag}").push()
-                        }
-                    }
+                container('docker') {
+                    sh 'docker --version'
+                    sh 'docker build -t my-image:latest .'
                 }
             }
         }
