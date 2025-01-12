@@ -17,6 +17,11 @@ pipeline {
                     volumeMounts:
                     - mountPath: /var/run/docker.sock
                       name: docker-sock
+                  - name: dind
+                    image: docker:20.10.21-dind
+                    args: ["--registry-mirror=https://registry-1.docker.io"]
+                    securityContext:
+                      privileged: true
                   volumes:
                   - name: docker-sock
                     hostPath:
