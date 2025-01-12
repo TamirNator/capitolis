@@ -4,18 +4,23 @@ pipeline {
             yaml '''
                 apiVersion: v1
                 kind: Pod
-                spec:    
+                spec:
                   containers:
-                  - name: docker
-                    image: '508058148115.dkr.ecr.us-east-1.amazonaws.com/jenkins:latest'
-                    tty: true
-                    volumeMounts:
-                    - mountPath: /var/run/docker.sock
-                      name: docker-sock
-                  volumes:
-                  - name: docker-sock
-                    hostPath:
-                      path: /var/run/docker.sock    
+                - name: docker
+                  image: 508058148115.dkr.ecr.us-east-1.amazonaws.com/jenkins:latest
+                  command:
+                  - /usr/bin/bash
+                  - -c
+                    args:
+                    - while true; do sleep 30; done
+                  tty: true
+                  volumeMounts:
+                  - mountPath: /var/run/docker.sock
+                    name: docker-sock
+            volumes:
+            - name: docker-sock
+              hostPath:
+                path: /var/run/docker.sock   
                 '''
             }
         }
