@@ -36,7 +36,7 @@ pipeline {
                     def ecrRepo = "508058148115.dkr.ecr.us-east-1.amazonaws.com/${JOB_NAME}"
                     def imageTag = "latest"
                     echo "Building ${ecrRepo}:${imageTag}"
-                    docker.build("${ecrRepo}:${imageTag}")
+                    docker build -f test:test -t ("${ecrRepo}:${imageTag}") .
                 }
             }
         }
