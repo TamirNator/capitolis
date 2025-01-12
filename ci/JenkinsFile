@@ -1,10 +1,30 @@
 pipeline {
     agent {
-        docker {
-            image '700935310038.dkr.ecr.eu-west-1.amazonaws.com/tamir/jenkins/agent:1.4'
-            args  '--user root -v /var/run/docker.sock:/var/run/docker.sock'
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: docker
+    image: docker:20.10.21
+    command:
+    - /bin/sh
+    args:
+    - -c
+    - while true; do sleep 30; done
+    tty: true
+    volumeMounts:
+    - name: docker-sock
+      mountPath: /var/run/docker.sock
+  volumes:
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
+      type: Socket
+            """
         }
-        }
+    }
     stages {
         stage('Checkout Code') {
             steps {
