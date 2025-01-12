@@ -1,33 +1,9 @@
 pipeline {
     agent {
-        kubernetes {
-            yaml '''
-                apiVersion: v1
-                kind: Pod
-                spec:
-                  containers:
-                  - name: docker
-                    image: 508058148115.dkr.ecr.us-east-1.amazonaws.com/jenkins:latest
-                    command:
-                    - /usr/bin/bash
-                    - -c
-                    args:
-                    - while true; do sleep 30; done
-                    tty: true
-                    volumeMounts:
-                    - mountPath: /var/run/docker.sock
-                      name: docker-sock
-                  - name: dind
-                    image: docker:20.10.21-dind
-                    args: ["--registry-mirror=https://registry-1.docker.io"]
-                    securityContext:
-                      privileged: true
-                  volumes:
-                  - name: docker-sock
-                    hostPath:
-                      path: /var/run/docker.sock   
-                '''
-            }
+        docker {
+            image '700935310038.dkr.ecr.eu-west-1.amazonaws.com/tamir/jenkins/agent:1.4'
+            args  '--user root -v /var/run/docker.sock:/var/run/docker.sock'
+        }
         }
     stages {
         stage('Checkout Code') {
