@@ -1,27 +1,9 @@
 pipeline {
     agent {
-        kubernetes {
-            yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: docker
-    image: 508058148115.dkr.ecr.us-east-1.amazonaws.com/jenkins:latest
-    command:
-    - cat
-    tty: true
-    volumeMounts:
-    - name: docker-sock
-      mountPath: /var/run/docker.sock
-  volumes:
-  - name: docker-sock
-    hostPath:
-      path: /var/run/docker.sock
-      type: Socket
-            """
+         docker {
+            image '508058148115.dkr.ecr.us-east-1.amazonaws.com/jenkins:latest'
+            args  '--user root -v /var/run/docker.sock:/var/run/docker.sock'
         }
-    }
     stages {
         stage('Build Docker Image') {
             steps {
