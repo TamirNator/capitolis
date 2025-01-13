@@ -6,13 +6,11 @@ pipeline {
         }
     }
     stages {
-        stage('Build Docker Image') {
+        stage('Test') {
             steps {
-                container('docker') {
-                    sh 'docker --version'
-                    sh 'docker build -t my-image:latest .'
-                }
+                sh 'docker --version'
             }
         }
+    }
     }
 }
