@@ -38,7 +38,10 @@ spec:
         stage('Docker Check') {
             steps {
                 container('docker') {
-                    sh 'docker build -f services/booking-service/Dockerfile -t test:test .'
+                    sh ''' 
+                        docker build -f services/booking-service/Dockerfile -t 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest .
+                        docker push services/booking-service/Dockerfile -t 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest
+                    '''
                 }
             }
         }
