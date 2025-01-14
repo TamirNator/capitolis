@@ -31,6 +31,7 @@ spec:
                 container('aws-cli') {
                     sh '''
                         echo "Logging into ECR..."
+                        docker --version
                         aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 508058148115.dkr.ecr.us-east-1.amazonaws.com
                     '''
                 }
