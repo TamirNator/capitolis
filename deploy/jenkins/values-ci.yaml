@@ -1,0 +1,58 @@
+controller:
+  JCasC:
+    defaultConfig: no
+    overwriteConfiguration: true
+    configScripts:
+      kubernetes-cloud: |
+        jenkins:
+          clouds:
+          - kubernetes:
+              name: "kubernetes"
+              namespace: "jenkins"
+              jenkinsUrl: "http://jenkins.jenkins.svc.cluster.local:8080"
+              serverUrl: "https://kubernetes.default"
+              jenkinsTunnel: "jenkins-agent.jenkins.svc.cluster.local:50000"
+              containerCapStr: "10"
+              templates:
+                - name: "default"
+                  label: "jenkins-agent"
+                  nodeUsageMode: "EXCLUSIVE"
+                  containers:
+                  - name: "jnlp"
+                    image: "508058148115.dkr.ecr.us-east-1.amazonaws.com/jenkins:latest"
+                    args: "${computer.jnlpmac} ${computer.name}"
+                    ttyEnabled: true
+                    
+  installPlugins:
+    - kubernetes
+    - workflow-aggregator
+    - git
+    - configuration-as-code
+    - docker-workflow
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+agent:
+  enabled: false
+  image:
+    repository: "508058148115.dkr.ecr.us-east-1.amazonaws.com/jenkins"
+    tag: "latest"
+  disableDefaultAgent: true
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+
+persistence:
+  enabled: true
+  storageClass: "gp2"
+  size: 8Gi

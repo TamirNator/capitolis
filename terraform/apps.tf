@@ -1,29 +1,13 @@
 resource "helm_release" "jenkins" {
   name       = "jenkins"
-  chart      = "jenkins"
-  repository = "https://charts.jenkins.io"
+  chart      = "../deploy/jenkins"
   namespace  = "jenkins"
   create_namespace = true
   set {
     name = "persistence.storageClass"
     value = "gp2"
   }
-
-  # Install Jenkins plugins
-  set_list {
-    name  = "controller.installPlugins"
-    value = [
-      "amazon-ecr:1.7",
-      "aws-credentials",
-      "kubernetes",
-      "workflow-aggregator",
-      "github",
-      "github-branch-source",
-      "pipeline-stage-view",
-      "git",
-      "configuration-as-code"
-    ]
-  }
+  values = [file("../deploy/jenkins/values-ci.yaml")]
 }
 
 # Deploy NGINX Ingress

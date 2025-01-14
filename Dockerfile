@@ -29,8 +29,15 @@ RUN curl https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz -o /usr/local/bin/h
     && tar xfz /usr/local/bin/helm-v3.11.0-linux-amd64.tar.gz \
     && mv linux-amd64/helm /usr/local/bin/
 
-FROM jenkins/agent
-COPY --from=docker /usr/local/bin/docker /usr/local/bin/
+    RUN amazon-linux-extras enable docker \
+    && yum install -y docker \
+    && docker --version || true
+
+# Clean up
+RUN yum clean all && rm -rf /var/cache/yum
+
+FROM --platform=linux/amd64 jenkins/inbound-agent:latest
+COPY --from=installer /usr/bin/docker /usr/bin/docker
 COPY --from=installer /usr/local/aws-cli/ /usr/local/aws-cli/
 COPY --from=installer /aws-cli-bin/ /usr/local/bin/
 COPY --from=installer /usr/local/bin/kubectl /usr/local/bin/kubectl
