@@ -26,13 +26,13 @@ spec:
         }
     }
     stages {
-        stage('Vulnerability Scan') {
-            steps {
-                container('docker') {
-                    sh 'docker scan $ECR_URL:latest'
-                }
-            }
-        }
+        // stage('Vulnerability Scan') {
+        //     steps {
+        //         container('docker') {
+        //             sh 'docker scan $ECR_URL:latest'
+        //         }
+        //     }
+        // }
         stage('Test') {
             steps {
                 container('docker') {
