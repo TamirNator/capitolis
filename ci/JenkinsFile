@@ -8,24 +8,23 @@ spec:
   containers:
   - name: jnlp
     image: jenkins/inbound-agent:latest
-    args: ['\${computer.jnlpmac}', '\${computer.name}']
+  - name: docker
+    image: docker:20.10
+    command:
+    - cat
+    tty: true
     volumeMounts:
     - mountPath: /var/run/docker.sock
       name: docker-sock
-    - mountPath: /usr/bin/docker
-      name: docker-bin
   volumes:
   - name: docker-sock
     hostPath:
       path: /var/run/docker.sock
-  - name: docker-bin
-    hostPath:
-      path: /usr/bin/docker
 """
         }
     }
     stages {
-        stage('Docker Test') {
+        stage('Docker Check') {
             steps {
                 sh 'docker --version'
             }
