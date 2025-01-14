@@ -38,7 +38,7 @@ spec:
         stage('Docker Check') {
             steps {
                 container('docker') {
-                    sh 'docker --version'
+                    sh 'docker build -f services/booking-service/Dockerfile -t test:test .'
                 }
             }
         }
