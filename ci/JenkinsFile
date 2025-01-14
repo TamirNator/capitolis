@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            label 'jenkins-agent'
+        }
+    }
     stages {
         stage('Test') {
             steps {
