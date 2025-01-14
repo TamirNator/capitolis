@@ -7,7 +7,7 @@ kind: Pod
 spec:
   containers:
   - name: docker
-    image: docker:20.10
+    image: 508058148115.dkr.ecr.us-east-1.amazonaws.com/jenkins:latest
     command:
     - cat
     tty: true
@@ -16,11 +16,6 @@ spec:
       name: docker-sock
     - mountPath: /home/jenkins/agent
       name: workspace-volume
-  - name: aws-cli
-    image: amazon/aws-cli:2.13.14
-    command:
-    - cat
-    tty: true
   volumes:
   - name: docker-sock
     hostPath:
