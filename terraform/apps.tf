@@ -1,13 +1,13 @@
 resource "helm_release" "jenkins" {
   name       = "jenkins"
-  chart      = "../deploy/jenkins"
+  chart      = "jenkins"
+  repository = "https://charts.jenkins.io"
   namespace  = "jenkins"
   create_namespace = true
   set {
     name = "persistence.storageClass"
     value = "gp2"
   }
-  values = [file("../deploy/jenkins/values-ci.yaml")]
 }
 
 # Deploy NGINX Ingress

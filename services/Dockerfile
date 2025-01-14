@@ -21,4 +21,4 @@ ENV PYTHONPATH=/app
 EXPOSE 5001
 
 # Run the microservice
-CMD ["python", "services/user-service/user.py"]
+CMD ["python", "services/booking.py"]

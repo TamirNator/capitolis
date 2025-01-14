@@ -28,10 +28,9 @@ spec:
     stages {
         stage('ECR Login') {
             steps {
-                container('aws-cli') {
+                container('docker') {
                     sh '''
                         echo "Logging into ECR..."
-                        docker --version
                         aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 508058148115.dkr.ecr.us-east-1.amazonaws.com
                     '''
                 }
@@ -50,5 +49,18 @@ spec:
                 }
             }
         }
+        // stage('Deploy') {
+        //     steps {
+        //         container('docker') {
+        //             sh '''
+        //                 echo "Building Docker image..."
+        //                 docker build -f services/booking-service/Dockerfile -t 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest .
+
+        //                 echo "Pushing Docker image to ECR..."
+        //                 docker push 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest
+        //             '''
+        //         }
+        //     }
+        // }
     }
 }

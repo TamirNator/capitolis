@@ -14,5 +14,5 @@ variable "vpc_cidr" {
 }
 
 variable "services" {
-  default = ["movies-service", "user-service", "booking-service", "showtimes-service"]
+  default = ["movies-service", "jenkins"]
 }
