@@ -8,6 +8,13 @@ spec:
   containers:
   - name: jnlp
     image: jenkins/inbound-agent:latest
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+    volumeMounts:
+    - mountPath: /home/jenkins/agent
+      name: workspace-volume
   - name: docker
     image: docker:20.10
     command:
@@ -16,17 +23,23 @@ spec:
     volumeMounts:
     - mountPath: /var/run/docker.sock
       name: docker-sock
+    - mountPath: /home/jenkins/agent
+      name: workspace-volume
   volumes:
   - name: docker-sock
     hostPath:
       path: /var/run/docker.sock
+  - name: workspace-volume
+    emptyDir: {}
 """
         }
     }
     stages {
         stage('Docker Check') {
             steps {
-                sh 'docker --version'
+                container('docker') {
+                    sh 'docker --version'
+                }
             }
         }
     }
