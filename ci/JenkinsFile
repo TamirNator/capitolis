@@ -25,6 +25,11 @@ spec:
       name: docker-sock
     - mountPath: /home/jenkins/agent
       name: workspace-volume
+  - name: aws-cli
+    image: amazon/aws-cli:2.13.14
+    command:
+    - cat
+    tty: true
   volumes:
   - name: docker-sock
     hostPath:
@@ -38,9 +43,10 @@ spec:
         stage('Docker Check') {
             steps {
                 container('docker') {
-                    sh ''' 
+                    sh '''
+                        aws --version
                         docker build -f services/booking-service/Dockerfile -t 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest .
-                        docker push services/booking-service/Dockerfile -t 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest
+                        docker 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest
                     '''
                 }
             }
