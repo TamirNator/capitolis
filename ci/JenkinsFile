@@ -55,7 +55,7 @@ spec:
                 container('docker') {
                     sh '''
                         echo "Building Docker image..."
-                        docker build -f services/booking-service/Dockerfile -t 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest .
+                        docker build -f services/Dockerfile -t 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest .
                         echo "Pushing Docker image to ECR..."
                         docker push 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest
                     '''
