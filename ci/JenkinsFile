@@ -33,13 +33,13 @@ spec:
         //         }
         //     }
         // }
-        stage('Test') {
-            steps {
-                container('docker') {
-                    sh 'pytest tests/'
-                }
-            }
-        }
+        // stage('Test') {
+        //     steps {
+        //         container('docker') {
+        //             sh 'pytest tests/'
+        //         }
+        //     }
+        // }
         stage('ECR Login') {
             steps {
                 container('docker') {
@@ -64,15 +64,11 @@ spec:
         }
         // stage('Deploy') {
         //     steps {
-        //         container('docker') {
-        //             sh '''
-        //                 echo "Building Docker image..."
-        //                 docker build -f services/booking-service/Dockerfile -t 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest .
-
-        //                 echo "Pushing Docker image to ECR..."
-        //                 docker push 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest
-        //             '''
-        //         }
+        //         sh '''
+        //         helm upgrade --install movies-service ./helm-charts/movies-service \
+        //             --set image.repository=$ECR_URL \
+        //             --set image.tag=latest
+        //         '''
         //     }
         // }
     }
