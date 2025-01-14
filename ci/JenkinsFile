@@ -23,10 +23,8 @@ spec:
     stages {
         stage('Docker Test') {
             steps {
-                container('docker') {
-                    sh 'docker --version'
-                    sh 'docker ps'
-                }
+                sh 'docker --version'
+                sh 'docker ps'
             }
         }
     }
