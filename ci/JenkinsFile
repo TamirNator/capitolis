@@ -1,23 +1,7 @@
 pipeline {
     agent {
         kubernetes {
-            defaultContainer 'jnlp'
-            yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: jnlp
-    image: 508058148115.dkr.ecr.us-east-1.amazonaws.com/jenkins:latest
-    args: "${computer.jnlpmac} ${computer.name}"
-    volumeMounts:
-    - mountPath: /var/run/docker.sock
-      name: docker-sock
-  volumes:
-  - name: docker-sock
-    hostPath:
-      path: /var/run/docker.sock
-"""
+            defaultContainer 'default'
         }
     }
     stages {
