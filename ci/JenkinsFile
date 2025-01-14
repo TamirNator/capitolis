@@ -26,6 +26,20 @@ spec:
         }
     }
     stages {
+        stage('Vulnerability Scan') {
+            steps {
+                container('docker') {
+                    sh 'docker scan $ECR_URL:latest'
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                container('docker') {
+                    sh 'pytest tests/'
+                }
+            }
+        }
         stage('ECR Login') {
             steps {
                 container('docker') {
@@ -42,7 +56,6 @@ spec:
                     sh '''
                         echo "Building Docker image..."
                         docker build -f services/booking-service/Dockerfile -t 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest .
-
                         echo "Pushing Docker image to ECR..."
                         docker push 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest
                     '''
