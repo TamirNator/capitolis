@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM --platform=linux/amd64 python:3.11-slim
 
 # Set the working directory
 WORKDIR /app
@@ -21,4 +21,4 @@ ENV PYTHONPATH=/app
 EXPOSE 5001
 
 # Run the microservice
-CMD ["python", "services/booking.py"]
+CMD ["python", "services/movies.py"]
