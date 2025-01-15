@@ -101,15 +101,50 @@ EOT
   depends_on = [ module.vpc ]
 }
 
-resource "kubernetes_role_binding" "dev_role_binding" {
+resource "kubernetes_role_binding" "jenkins_role_binding" {
   metadata {
-    name      = "eks-dev-role-binding"
+    name      = "jenkins-dev-role-binding"
     namespace = "jenkins"
   }
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "Role"
-    name      = "eks-dev-role"
+    name      = "jenkins-dev-role"
+  }
+  subject {
+    kind      = "ServiceAccount"
+    name      = "default"
+    namespace = "jenkins"
+    api_group = ""
+  }
+}
+
+resource "kubernetes_role" "jenkins_role" {
+  metadata {
+    name = "jenkins-dev-role"
+    namespace = "jenkins"
+  }
+  rule {
+    api_groups     = [""]
+    resources      = ["pods", "secrets", "serviceaccounts"]
+    verbs          = ["get", "list", "watch", "create", "update", "patch", "delete"]
+  }
+  rule {
+    api_groups = ["apps"]
+    resources  = ["deployments"]
+    verbs      = ["get", "list"]
+  }
+}
+
+resource "kubernetes_role_binding" "dev_role_binding" {
+  metadata {
+    name      = "eks-dev-role-binding"
+    namespace = "default"
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = kubernetes_role.dev_role.metadata[0].name
   }
   subject {
     kind      = "ServiceAccount"
@@ -122,17 +157,17 @@ resource "kubernetes_role_binding" "dev_role_binding" {
 resource "kubernetes_role" "dev_role" {
   metadata {
     name = "eks-dev-role"
-    namespace = "jenkins"
+    namespace = "default"
   }
   rule {
     api_groups     = [""]
-    resources      = ["pods", "secrets"]
+    resources      = ["pods", "secrets", "serviceaccounts", "services"]
     verbs          = ["get", "list", "watch", "create", "update", "patch", "delete"]
   }
   rule {
     api_groups = ["apps"]
     resources  = ["deployments"]
-    verbs      = ["get", "list"]
+    verbs      = ["get", "list", "watch", "create", "update", "patch", "delete"]
   }
 }
 
@@ -197,37 +232,56 @@ resource "aws_iam_policy" "eks_policy" {
   })
 }
 
-resource "aws_lb" "my_app_nlb" {
-  name               = "my-app-nlb"
-  internal           = false
-  load_balancer_type = "network"
-  security_groups    = [aws_security_group.my_app_sg.id]
-  subnets            = module.vpc.private_subnets
-}
+# resource "aws_lb" "my_app_nlb" {
+#   name               = "cinema-nlb"
+#   internal           = false
+#   load_balancer_type = "network"
+#   security_groups    = [aws_security_group.my_app_sg.id]
+#   subnets            = module.vpc.private_subnets
+# }
 
-# Security Group for NLB
-resource "aws_security_group" "my_app_sg" {
-  name        = "my-app-nlb-sg"
-  description = "Security group for My App NLB"
-  vpc_id      = module.vpc.vpc_id
+# # Security Group for NLB
+# resource "aws_security_group" "my_app_sg" {
+#   name        = "cinema-nlb-sg"
+#   description = "Security group for My App NLB"
+#   vpc_id      = module.vpc.vpc_id
 
-  # Allow incoming traffic on port 80 (HTTP) or 443 (if using HTTPS in the future)
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+#   # Allow incoming traffic on port 80 (HTTP) or 443 (if using HTTPS in the future)
+#   ingress {
+#     from_port   = 80
+#     to_port     = 80
+#     protocol    = "tcp"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
 
-  # Allow all outbound traffic
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+#   # Allow all outbound traffic
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
 
-  tags = {
-    Name = "my-app-nlb-sg"
-  }
-}
+#   tags = {
+#     Name = "cinema-nlb-sg"
+#   }
+# }
+
+# resource "aws_lb_target_group" "my_app_tg" {
+#   name        = "movies-service-tg"
+#   port        = 5001 # Port on your application
+#   protocol    = "TCP"
+#   vpc_id      = module.vpc.vpc_id
+#   target_type = "ip"
+# }
+
+# resource "aws_lb_listener" "my_app_listener" {
+#   load_balancer_arn = aws_lb.my_app_nlb.arn
+#   port              = 80
+#   protocol          = "TCP" # Changed from HTTP to TCP
+
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = aws_lb_target_group.my_app_tg.arn
+#   }
+# }
