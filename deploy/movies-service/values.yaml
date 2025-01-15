@@ -42,7 +42,7 @@ service:
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
     service.beta.kubernetes.io/aws-load-balancer-name: "cinema-nlb"
-    service.beta.kubernetes.io/aws-load-balancer-target-group-attributes: "arn:aws:elasticloadbalancing:us-east-1:508058148115:targetgroup/movies-service-tg/0aebb6287b57507f"
+    service.beta.kubernetes.io/aws-load-balancer-target-group-arn: "arn:aws:elasticloadbalancing:us-east-1:508058148115:targetgroup/movies-service-tg/0aebb6287b57507f"
   port: 80
   targetPort: 5001
   protocol: TCP
