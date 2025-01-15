@@ -40,20 +40,13 @@ spec:
         //         }
         //     }
         // }
-        stage('ECR Login') {
+
+        stage('Docker Build and Push') {
             steps {
                 container('docker') {
                     sh '''
                         echo "Logging into ECR..."
                         aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 508058148115.dkr.ecr.us-east-1.amazonaws.com
-                    '''
-                }
-            }
-        }
-        stage('Docker Build and Push') {
-            steps {
-                container('docker') {
-                    sh '''
                         echo "Building Docker image..."
                         docker build -f services/Dockerfile -t 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest .
                         echo "Pushing Docker image to ECR..."
@@ -62,14 +55,14 @@ spec:
                 }
             }
         }
-        // stage('Deploy') {
-        //     steps {
-        //         sh '''
-        //         helm upgrade --install movies-service ./helm-charts/movies-service \
-        //             --set image.repository=$ECR_URL \
-        //             --set image.tag=latest
-        //         '''
-        //     }
-        // }
+        stage('Deploy') {
+            steps {
+                sh '''
+                helm upgrade --install movies-service ./helm-charts/movies-service \
+                    --set image.repository=508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service \
+                    --set image.tag=latest
+                '''
+            }
+        }
     }
 }
