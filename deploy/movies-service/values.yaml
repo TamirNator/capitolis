@@ -44,6 +44,7 @@ service:
     service.beta.kubernetes.io/aws-load-balancer-name: "cinema-nlb"
     service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: "/"
     service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "5001"
+    service.beta.kubernetes.io/aws-load-balancer-target-type: "ip"
   port: 80
   targetPort: 5001
   protocol: TCP
