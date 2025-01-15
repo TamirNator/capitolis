@@ -5,7 +5,7 @@ variable "region" {
 
 variable "cluster_name" {
   description = "EKS cluster name"
-  default     = "cinema-cluster"
+  default     = "cinema-eks"
 }
 
 variable "vpc_cidr" {

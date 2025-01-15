@@ -5,8 +5,8 @@ module "vpc" {
   name       = "cinema-vpc"
   cidr       = var.vpc_cidr
   azs        = ["us-east-1a", "us-east-1b"]
-  public_subnets  = ["10.0.0.0/27", "10.0.0.32/27"]
-  private_subnets = ["10.0.0.64/27", "10.0.0.96/27"]
+  public_subnets  = ["10.0.0.0/26", "10.0.0.64/26"]
+  private_subnets = ["10.0.0.128/26", "10.0.0.192/26"]
   enable_nat_gateway  = true
   single_nat_gateway  = true
 }
@@ -36,6 +36,13 @@ module "eks" {
   node_iam_role_additional_policies = {
     EKSPolicy = aws_iam_policy.eks_policy.arn
   }
+  access_entries = {
+      jenkins_service_account = {
+        principal_arn = aws_iam_role.jenkins_service_account_role.arn
+        username      = "jenkins-service-account"
+        groups        = ["eks-dev-role"]
+      }
+    }
   eks_managed_node_groups = {
     main = {
       ami_type      = "AL2_x86_64"
@@ -47,6 +54,32 @@ module "eks" {
       iam_role_additional_policies = {
         "EKSPolicy" = aws_iam_policy.eks_policy.arn
       }
+      enable_bootstrap_user_data = true
+      post_bootstrap_user_data = <<-EOT
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+
+--==BOUNDARY==
+Content-Type: text/cloud-config; charset="us-ascii"
+
+#cloud-config
+packages:
+  - docker
+
+--==BOUNDARY==
+Content-Type: text/x-shellscript; charset="us-ascii"
+
+#!/bin/bash
+set -o xtrace
+yum update -y
+amazon-linux-extras enable docker
+yum install -y docker
+systemctl start docker
+systemctl enable docker
+usermod -aG docker ec2-user
+
+--==BOUNDARY==--
+EOT
     }
   }
 
@@ -65,12 +98,13 @@ module "eks" {
     Environment = "dev"
     Terraform   = "true"
   }
+  depends_on = [ module.vpc ]
 }
 
 resource "kubernetes_role_binding" "dev_role_binding" {
   metadata {
-    name      = "eks-dev-role"
-    namespace = "default"
+    name      = "eks-dev-role-binding"
+    namespace = "jenkins"
   }
   role_ref {
     api_group = "rbac.authorization.k8s.io"
@@ -78,26 +112,49 @@ resource "kubernetes_role_binding" "dev_role_binding" {
     name      = "eks-dev-role"
   }
   subject {
-    kind      = "User"
-    name      = "admin"
-    api_group = "rbac.authorization.k8s.io"
+    kind      = "ServiceAccount"
+    name      = "default"
+    namespace = "jenkins"
+    api_group = ""
   }
 }
 
 resource "kubernetes_role" "dev_role" {
   metadata {
     name = "eks-dev-role"
+    namespace = "jenkins"
   }
-
   rule {
     api_groups     = [""]
-    resources      = ["pods"]
-    verbs          = ["get", "list", "watch"]
+    resources      = ["pods", "secrets"]
+    verbs          = ["get", "list", "watch", "create", "update", "patch", "delete"]
   }
   rule {
     api_groups = ["apps"]
     resources  = ["deployments"]
     verbs      = ["get", "list"]
+  }
+}
+
+# IAM Role for Jenkins Service Account
+resource "aws_iam_role" "jenkins_service_account_role" {
+  name               = "jenkins-service-account-role"
+  assume_role_policy = data.aws_iam_policy_document.jenkins_service_account_assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "jenkins_service_account_assume_role_policy" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Federated"
+      identifiers = [module.eks.oidc_provider_arn]
+    }
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    condition {
+      test     = "StringEquals"
+      variable = "${module.eks.oidc_provider}:sub"
+      values   = ["system:serviceaccount:jenkins:default"]
+    }
   }
 }
 
@@ -124,7 +181,53 @@ resource "aws_iam_policy" "eks_policy" {
           "ec2:DescribeVolumesModifications"
         ],
         Resource = "*"
-      }
+      },
+      {
+			"Sid": "AllowECR",
+			"Effect": "Allow",
+			"Action": [
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:PutImage"
+        ],
+			"Resource": "*"
+		  }
     ]
   })
+}
+
+resource "aws_lb" "my_app_nlb" {
+  name               = "my-app-nlb"
+  internal           = false
+  load_balancer_type = "network"
+  security_groups    = [aws_security_group.my_app_sg.id]
+  subnets            = module.vpc.private_subnets
+}
+
+# Security Group for NLB
+resource "aws_security_group" "my_app_sg" {
+  name        = "my-app-nlb-sg"
+  description = "Security group for My App NLB"
+  vpc_id      = module.vpc.vpc_id
+
+  # Allow incoming traffic on port 80 (HTTP) or 443 (if using HTTPS in the future)
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow all outbound traffic
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "my-app-nlb-sg"
+  }
 }
