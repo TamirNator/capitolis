@@ -38,21 +38,20 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-  type: NodePort
-  # annotations:
-  #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-  #   service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
-  #   service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: "/"
-  #   service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "5001"
-  #   service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: "HTTP"
-  #   service.beta.kubernetes.io/aws-load-balancer-target-type: "ip"
-  #   service.beta.kubernetes.io/aws-load-balancer-name: "cinema-nlb"
-  #   service.beta.kubernetes.io/aws-load-balancer-target-group-attributes: "deregistration_delay.timeout_seconds=30,stickiness.enabled=true,stickiness.type=lb_cookie"
-  port: 80
-  targetPort: 5001
-  # protocol: http
-  # loadBalancerSourceRanges:
-  #   - 0.0.0.0/0
+  type: LoadBalancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-name: "cinema-nlb"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: "/"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "5001"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: "HTTP"
+    service.beta.kubernetes.io/aws-load-balancer-target-type: "ip"
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 5001
 
 ingress:
   enabled: false
