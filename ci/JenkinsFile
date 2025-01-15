@@ -57,11 +57,13 @@ spec:
         }
         stage('Deploy') {
             steps {
-                sh '''
-                helm upgrade --install movies-service ./helm-charts/movies-service \
-                    --set image.repository=508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service \
-                    --set image.tag=latest
-                '''
+                container('docker') {
+                    sh '''
+                    helm upgrade --install movies-service ./helm-charts/movies-service \
+                        --set image.repository=508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service \
+                        --set image.tag=latest
+                    '''
+                }
             }
         }
     }
