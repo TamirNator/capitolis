@@ -59,7 +59,7 @@ spec:
             steps {
                 container('docker') {
                     sh '''
-                    helm upgrade --install movies-service ./helm-charts/movies-service \
+                    helm upgrade --install movies-service ./deploy/movies-service \
                         --set image.repository=508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service \
                         --set image.tag=latest
                     '''
