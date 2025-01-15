@@ -37,8 +37,14 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-  type: NodePort
-  port: 5001
+  type: LoadBalancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-name: "movies-nlb"
+  port: 80
+  targetPort: 5001
+  protocol: TCP
 
 # service:
 #   type: LoadBalancer
