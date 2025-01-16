@@ -32,7 +32,7 @@ spec:
     stages {
         stage('Scan Dependencies') {
             steps {
-                container('python') {
+                container('docker') {
                     sh '''
                         pip install safety
                         safety check -r requirements.txt
