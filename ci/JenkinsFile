@@ -29,17 +29,17 @@ spec:
         ECR_REPO_URL = '508058148115.dkr.ecr.us-east-1.amazonaws.com'
         BUILD_TAG = "${env.BUILD_ID}"
     }
-    // stages {
-    //     stage('Scan Dependencies') {
-    //         steps {
-    //             container('docker') {
-    //                 sh '''
-    //                     pip3 install safety
-    //                     safety check -r requirements.txt
-    //                 '''
-    //             }
-    //         }
-    //     }
+    stages {
+        // stage('Scan Dependencies') {
+        //     steps {
+        //         container('docker') {
+        //             sh '''
+        //                 pip3 install safety
+        //                 safety check -r requirements.txt
+        //             '''
+        //         }
+        //     }
+        // }
         stage('Docker Build and Push') {
             steps {
                 container('docker') {
