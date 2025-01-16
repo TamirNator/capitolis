@@ -47,6 +47,7 @@ service:
   ports:
     - port: 80
       targetPort: 5001
+      containerPort: 5001
       protocol: TCP
   labelSelector:
     app: my-app
