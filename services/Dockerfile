@@ -1,5 +1,8 @@
 FROM --platform=linux/amd64 python:3.11-slim
 
+USER root
+RUN apt-get update && apt-get install -y curl
+
 # Set the working directory
 WORKDIR /app
 
