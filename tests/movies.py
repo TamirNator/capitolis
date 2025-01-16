@@ -8,18 +8,20 @@ class TestMoviesService(unittest.TestCase):
 
     def test_all_movie_records(self):
         """ Test /movies/<movieid> for all known movies"""
-        for movieid, expected in GOOD_RESPONSES.iteritems():
+        for movieid, expected in GOOD_RESPONSES.items():  # Updated to use items()
             expected['uri'] = "/movies/{}".format(movieid)
             reply = requests.get("{}/{}".format(self.url, movieid))
             actual_reply = reply.json()
-            self.assertEqual( set(actual_reply.items()), set(expected.items()))
+            self.assertEqual(set(actual_reply.items()), set(expected.items()))
 
     def test_not_found(self):
         invalid_movie_id = "b18f"
         actual_reply = requests.get("{}/{}".format(self.url, invalid_movie_id))
-        self.assertEqual(actual_reply.status_code, 404,
-                    "Got {} but expected 404".format(
-                        actual_reply.status_code))
+        self.assertEqual(
+            actual_reply.status_code,
+            404,
+            "Got {} but expected 404".format(actual_reply.status_code),
+        )
 
 
 GOOD_RESPONSES = {

@@ -25,21 +25,28 @@ spec:
 """
         }
     }
+    environment {
+        ECR_REPO_URL = '508058148115.dkr.ecr.us-east-1.amazonaws.com'
+        BUILD_TAG = "${env.BUILD_ID}"
+    }
     stages {
-        // stage('Vulnerability Scan') {
-        //     steps {
-        //         container('docker') {
-        //             sh 'docker scan $ECR_URL:latest'
-        //         }
-        //     }
-        // }
-        // stage('Test') {
-        //     steps {
-        //         container('docker') {
-        //             sh 'pytest tests/'
-        //         }
-        //     }
-        // }
+        stage('Scan Dependencies') {
+            steps {
+                container('python') {
+                    sh '''
+                        pip install safety
+                        safety check -r requirements.txt
+                    '''
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                container('docker') {
+                    sh 'pytest tests/*'
+                }
+            }
+        }
 
         stage('Docker Build and Push') {
             steps {
@@ -48,9 +55,9 @@ spec:
                         echo "Logging into ECR..."
                         aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 508058148115.dkr.ecr.us-east-1.amazonaws.com
                         echo "Building Docker image..."
-                        docker build -f services/Dockerfile -t 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest .
+                        docker build -t ${ECR_REPO_URL}/movies-service:${BUILD_TAG} .
                         echo "Pushing Docker image to ECR..."
-                        docker push 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:latest
+                        docker push ${ECR_REPO_URL}/movies-service:${BUILD_TAG}
                     '''
                 }
             }

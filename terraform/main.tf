@@ -9,6 +9,7 @@ module "vpc" {
   private_subnets = ["10.0.0.128/26", "10.0.0.192/26"]
   enable_nat_gateway  = true
   single_nat_gateway  = true
+  map_public_ip_on_launch = true
 }
 
 module "eks" {
@@ -27,10 +28,10 @@ module "eks" {
     kube-proxy = {}
   }
   vpc_id                   = module.vpc.vpc_id
-  subnet_ids               = module.vpc.private_subnets
+  subnet_ids               = module.vpc.public_subnets
 
   eks_managed_node_group_defaults = {
-    instance_types = ["t3.large"]
+    instance_types = ["t2.micro"]
     key_name       = "cinema"
   }
   node_iam_role_additional_policies = {
@@ -46,11 +47,9 @@ module "eks" {
   eks_managed_node_groups = {
     main = {
       ami_type      = "AL2_x86_64"
-      instance_type = "t3.medium"
-
-      min_size = 1
-      max_size = 5
-      desired_size = 1
+      min_size = 3
+      max_size = 10
+      desired_size = 5
       iam_role_additional_policies = {
         "EKSPolicy" = aws_iam_policy.eks_policy.arn
       }
@@ -170,6 +169,36 @@ resource "kubernetes_role" "dev_role" {
     verbs      = ["get", "list", "watch", "create", "update", "patch", "delete"]
   }
 }
+# Define the ClusterRole
+resource "kubernetes_cluster_role" "node_pod_list_role" {
+  metadata {
+    name = "node-pod-list-role"
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["pods", "pods/exec"]
+    verbs      = ["get", "list", "watch"]
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "node_pod_list_binding" {
+  metadata {
+    name = "node-pod-list-binding"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = kubernetes_cluster_role.node_pod_list_role.metadata[0].name
+  }
+
+  subject {
+    kind      = "Group"
+    name      = "system:nodes"
+    api_group = "rbac.authorization.k8s.io"
+  }
+}
 
 # IAM Role for Jenkins Service Account
 resource "aws_iam_role" "jenkins_service_account_role" {
@@ -221,6 +250,12 @@ resource "aws_iam_policy" "eks_policy" {
 			"Sid": "AllowECR",
 			"Effect": "Allow",
 			"Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:DescribeRepositories",
+        "ecr:ListImages",
+        "ecr:BatchGetImage",
         "ecr:InitiateLayerUpload",
         "ecr:UploadLayerPart",
         "ecr:CompleteLayerUpload",
