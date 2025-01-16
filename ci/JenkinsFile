@@ -34,7 +34,7 @@ spec:
             steps {
                 container('docker') {
                     sh '''
-                        pip install safety
+                        pip3 install safety
                         safety check -r requirements.txt
                     '''
                 }
