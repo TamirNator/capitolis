@@ -58,19 +58,21 @@ spec:
             steps {
                 container('docker') {
                     sh '''
-                        docker run -d --name movies-service -p 5001:5001 ${ECR_REPO_URL}/movies-service:${BUILD_TAG}
-
-                        # Wait for the service to start
-                        for i in {1..10}; do
-                            curl -s http://127.0.0.1:5001/health && break || sleep 3
-                        done
-
-                        # Run the tests
+                        # Stop and remove any container using port 5001
+                        existing_container=$(docker ps -q --filter "publish=5001")
+                        if [ -n "$existing_container" ]; then
+                        docker stop $existing_container
+                        docker rm $existing_container
+                        fi
+                        
+                        # Run the test container
+                        docker run -d -p 5001:5001 ${ECR_REPO_URL}/movies-service:${BUILD_TAG}
+                        
+                        # Run pytest
                         pytest tests/*
-
-                        # Clean up the container
-                        docker stop movies-service
-                        docker rm movies-service
+                        
+                        # Clean up the test container after running tests
+                        docker ps -q --filter "publish=5001" | xargs -r docker stop
                     '''
                 }
             }
