@@ -58,8 +58,19 @@ spec:
             steps {
                 container('docker') {
                     sh '''
-                        docker run -d -p 5001:5001 ${ECR_REPO_URL}/movies-service:${BUILD_TAG}
+                        docker run -d --name movies-service -p 5001:5001 ${ECR_REPO_URL}/movies-service:${BUILD_TAG}
+
+                        # Wait for the service to start
+                        for i in {1..10}; do
+                            curl -s http://127.0.0.1:5001/health && break || sleep 3
+                        done
+
+                        # Run the tests
                         pytest tests/*
+
+                        # Clean up the container
+                        docker stop movies-service
+                        docker rm movies-service
                     '''
                 }
             }
