@@ -25,9 +25,6 @@ spec:
 """
         }
     }
-    triggers {
-        githubPush() // This listens for GitHub push events
-    }
     environment {
         ECR_REPO_URL = '508058148115.dkr.ecr.us-east-1.amazonaws.com'
         BUILD_TAG = "${env.BUILD_ID}"
