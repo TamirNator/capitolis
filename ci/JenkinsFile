@@ -34,8 +34,7 @@ spec:
             steps {
                 container('docker') {
                     sh '''
-                        pip3 install safety
-                         safety check -r requirements.txt
+                        safety check -r requirements.txt
                     '''
                 }
             }
@@ -70,7 +69,7 @@ spec:
                         echo "Checking Container Logs:"
                         docker logs movies-service || true
                         
-                        CONTAINER_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' movies-service)
+                        export CONTAINER_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' movies-service)
 
                         echo "Curl Health Check:"
                         curl -v http://$CONTAINER_IP:5001/health || exit 1

@@ -11,7 +11,7 @@ RUN dnf install -y \
     && dnf clean all
 
 
-RUN python3 -m pip install safety==1.10.3
+RUN python3 -m pip install safety==1.10.3 pytest
 
 # Install AWS CLI
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
