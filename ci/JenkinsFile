@@ -35,7 +35,7 @@ spec:
                 container('docker') {
                     sh '''
                         pip3 install safety
-                        safety check -r requirements.txt
+                        safety scan -r requirements.txt
                     '''
                 }
             }

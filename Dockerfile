@@ -41,7 +41,10 @@ RUN amazon-linux-extras enable epel \
 
 # Install Python dependencies
 RUN python3 -m pip install --upgrade pip \
-    && python3 -m pip install pytest requests safety
+    && python3 -m pip install pytest requests "urllib3<2.0"
+
+# Set environment variables to use OpenSSL 1.1
+ENV LD_LIBRARY_PATH=/usr/lib64/openssl11:$LD_LIBRARY_PATH
 
 # Set working directory
 WORKDIR /app
