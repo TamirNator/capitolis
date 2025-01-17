@@ -30,22 +30,22 @@ spec:
         BUILD_TAG = "${env.BUILD_ID}"
     }
     stages {
-        // stage('Scan Dependencies') {
-        //     steps {
-        //         container('docker') {
-        //             sh '''
-        //                 pip3 install safety
-        //                 safety check -r requirements.txt
-        //             '''
-        //         }
-        //     }
-        // }
+        stage('Scan Dependencies') {
+            steps {
+                container('docker') {
+                    sh '''
+                        pip3 install safety
+                        safety check -r requirements.txt
+                    '''
+                }
+            }
+        }
         stage('Docker Build and Push') {
             steps {
                 container('docker') {
                     sh '''
                         echo "Logging into ECR..."
-                        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 508058148115.dkr.ecr.us-east-1.amazonaws.com
+                        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REPO_URL}
                         echo "Building Docker image..."
                         docker build -f services/Dockerfile -t ${ECR_REPO_URL}/movies-service:${BUILD_TAG} .
                         echo "Pushing Docker image to ECR..."
@@ -65,18 +65,13 @@ spec:
                         docker rm -f movies-service || true
         
                         echo "Running the Container..."
-                        docker run -d --name movies-service -p 5001:5001 508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service:24
-        
-                        echo "Sleeping to Allow Container to Start..."
-                        sleep 60
+                        docker run -d --name movies-service -p 5001:5001 ${ECR_REPO_URL}/movies-service:${BUILD_TAG}
         
                         echo "Checking Container Logs:"
                         docker logs movies-service || true
                         
                         CONTAINER_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' movies-service)
 
-                        sed -i "s|http://127.0.0.1:5001|http://$CONTAINER_IP:5001|g" tests/movies.py
-                        
                         echo "Curl Health Check:"
                         curl -v http://$CONTAINER_IP:5001/health || exit 1
         
@@ -91,8 +86,8 @@ spec:
                 container('docker') {
                     sh '''
                     helm upgrade --install movies-service ./deploy/movies-service \
-                        --set image.repository=508058148115.dkr.ecr.us-east-1.amazonaws.com/movies-service \
-                        --set image.tag=latest \
+                        --set image.repository=${ECR_REPO_URL}/movies-service \
+                        --set image.tag=${BUILD_TAG} \
                         -n default
                     '''
                 }
