@@ -72,8 +72,8 @@ spec:
                         echo "sleep Until Container is up"
                         sleep 5
                         
-                        export CONTAINER_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' movies-service):5001
-
+                        CONTAINER_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' movies-service)
+                        export MOVIES_SERVICE_URL=http://$CONTAINER_IP:5001
                         echo "Curl Health Check:"
                         curl -v http://$CONTAINER_IP:5001/health || exit 1
         
