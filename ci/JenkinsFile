@@ -72,9 +72,13 @@ spec:
         
                         echo "Checking Container Logs:"
                         docker logs movies-service || true
-        
+                        
+                        CONTAINER_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' movies-service)
+
+                        sed -i "s|http://127.0.0.1:5001|http://$CONTAINER_IP:5001|g" tests/movies.py
+                        
                         echo "Curl Health Check:"
-                        curl -v http://127.0.0.1:5001/health || exit 1
+                        curl -v http://$CONTAINER_IP:5001/health || exit 1
         
                         echo "Running Tests:"
                         pytest tests/movies.py
