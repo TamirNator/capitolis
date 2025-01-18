@@ -66,14 +66,14 @@ spec:
                         echo "Running the Container..."
                         docker run -d --name movies-service -p 5001:5001 ${ECR_REPO_URL}/movies-service:${BUILD_TAG}
         
+                        echo "sleep Until Container is up"
+                        sleep 10
+
                         echo "Checking Container Logs:"
                         docker logs movies-service || true
                         
-                        echo "sleep Until Container is up"
-                        sleep 5
-                        
                         CONTAINER_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' movies-service)
-                        export MOVIES_SERVICE_URL=http://$CONTAINER_IP:5001
+                        export MOVIES_SERVICE_URL=http://$CONTAINER_IP:5001/movies
                         echo "Curl Health Check:"
                         curl -v $MOVIES_SERVICE_URL/health || exit 1
         
