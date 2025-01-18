@@ -4,7 +4,9 @@ FROM --platform=linux/amd64 python:3.11-slim
 WORKDIR /app
 
 # Copy the entire project to the container
-COPY . .
+COPY services services/
+COPY database database/
+COPY setup.py requirements.txt ./
 
 # Install the dependencies and the `services` package
 RUN pip install --no-cache-dir -r requirements.txt

@@ -4,55 +4,64 @@ resource "helm_release" "jenkins" {
   repository = "https://charts.jenkins.io"
   namespace  = "jenkins"
   create_namespace = true
-  set {
-    name = "persistence.storageClass"
-    value = "gp2"
-  }
-  set {
-    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = aws_iam_role.jenkins_service_account_role.arn
-  }
-  set {
-    name  = "controller.service.annotations.alb\\.ingress\\.kubernetes\\.io/target-type"
-    value = "ip"
-  }
-
-  set {
-    name  = "controller.service.annotations.alb\\.ingress\\.kubernetes\\.io/healthcheck-path"
-    value = "/"
-  }
-
-  set {
-    name  = "controller.service.annotations.alb\\.ingress\\.kubernetes\\.io/healthcheck-port"
-    value = "8080"
-  }
-  set {
-    name  = "controller.resources.requests.cpu"
-    value = "500m"
-  }
-  set {
-    name  = "controller.resources.requests.memory"
-    value = "512Mi"
-  }
-  set {
-    name  = "controller.resources.limits.cpu"
-    value = "750m"
-  }
-  set {
-    name  = "controller.resources.limits.memory"
-    value = "768Mi"
-  }
-  set {
-    name  = "controller.javaOpts"
-    value = "-Xmx512m -Xms256m"
-  }
-  set {
-    name  = "controller.serviceType"
-    value = "NodePort"
-  }
-  set {
-    name  = "controller.jenkinsUriPrefix"
-    value = "/jenkins"
-  }
+  values          = [file("${path.module}/manifests/jenkins-values.yaml")]
   depends_on = [ module.eks ]
+}
+
+output "name" {
+  value = helm_release.nginx_ingress
+  sensitive = true
+}
+
+resource "helm_release" "nginx_ingress" {
+  name       = "nginx-ingress"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  namespace  = "ingress-nginx"
+  create_namespace = true
+
+  set {
+    name  = "controller.service.type"
+    value = "LoadBalancer"
+  }
+
+  set {
+    name  = "controller.service.externalTrafficPolicy"
+    value = "Cluster"
+  }
+
+  set {
+    name  = "controller.replicaCount"
+    value = 2
+  }
+
+  set {
+    name  = "controller.metrics.enabled"
+    value = "true"
+  }
+}
+
+# Grafana Helm Release
+resource "helm_release" "grafana" {
+  name            = "grafana"
+  chart           = "grafana"
+  repository      = "https://grafana.github.io/helm-charts"
+  namespace       = "monitoring"
+  create_namespace = true
+
+  values = [file("${path.module}/manifests/grafana-values.yaml")]
+
+  depends_on = [module.eks]
+}
+
+# Prometheus Helm Release
+resource "helm_release" "prometheus" {
+  name            = "kube-prometheus-stack"
+  chart           = "kube-prometheus-stack"
+  repository      = "https://prometheus-community.github.io/helm-charts"
+  namespace       = "monitoring"
+
+  values = [file("${path.module}/manifests/prometheus-values.yaml")]
+
+  depends_on = [module.eks, helm_release.grafana]
 }

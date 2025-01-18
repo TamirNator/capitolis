@@ -1,0 +1,23 @@
+persistence:
+  storageClass: gp2
+
+controller:
+  ingress:
+    enabled: true
+    hostName: "" # Replace with your desired hostname
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "/"
+    ingressClassName: nginx
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "750m"
+      memory: "768Mi"
+
+  javaOpts: "-Xmx512m -Xms256m"
+
+  serviceType: NodePort
+  jenkinsUriPrefix: "/jenkins"

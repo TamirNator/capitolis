@@ -1,6 +1,6 @@
 variable "region" {
   description = "AWS region"
-  default     = "us-east-1"
+  type = string
 }
 
 variable "cluster_name" {
@@ -10,9 +10,9 @@ variable "cluster_name" {
 
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
-  default     = "10.0.0.0/24"
 }
 
 variable "services" {
+  description = "Services name for creating ECR Repo"
   default = ["movies-service", "jenkins"]
 }

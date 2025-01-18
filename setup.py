@@ -4,7 +4,7 @@ setup(
     name="microservices",
     version="0.1",
     description="Example of Microservices using Flask",
-    author="Umer Mansoor",
+    author="Tamir",
     platforms=["any"],
     license="BSD",
     packages=find_packages(),  # Discover all packages (including services and subdirectories)
