@@ -48,6 +48,7 @@ Selector labels
 {{- define "movies-service.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "movies-service.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+app: {{ include "movies-service.name" . }}
 {{- end }}
 
 {{/*

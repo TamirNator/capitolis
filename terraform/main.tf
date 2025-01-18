@@ -31,7 +31,7 @@ module "eks" {
   subnet_ids               = module.vpc.public_subnets
 
   eks_managed_node_group_defaults = {
-    instance_types = ["t2.micro"]
+    instance_types = ["t2.small"]
     key_name       = "cinema"
   }
   node_iam_role_additional_policies = {
@@ -47,9 +47,9 @@ module "eks" {
   eks_managed_node_groups = {
     main = {
       ami_type      = "AL2_x86_64"
-      min_size = 3
+      min_size = 1
       max_size = 10
-      desired_size = 5
+      desired_size = 2
       iam_role_additional_policies = {
         "EKSPolicy" = aws_iam_policy.eks_policy.arn
       }
