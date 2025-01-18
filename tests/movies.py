@@ -6,7 +6,7 @@ import os
 class TestMoviesService(unittest.TestCase):
     def setUp(self):
         # Use an environment variable to configure the URL with a default value
-        self.url = os.getenv("MOVIES_SERVICE_URL/movies", "http://127.0.0.1:5001/movies")
+        self.url = os.getenv("MOVIES_SERVICE_URL", "http://127.0.0.1:5001/movies")
 
     def test_all_movie_records(self):
         """ Test /movies/<movieid> for all known movies"""
