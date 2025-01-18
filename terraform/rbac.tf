@@ -14,6 +14,7 @@ resource "kubernetes_role_binding" "jenkins_role_binding" {
     namespace = "jenkins"
     api_group = ""
   }
+  depends_on = [ helm_release.jenkins ]
 }
 
 resource "kubernetes_role" "jenkins_role" {
@@ -31,6 +32,7 @@ resource "kubernetes_role" "jenkins_role" {
     resources  = ["deployments"]
     verbs      = ["get", "list"]
   }
+  depends_on = [ helm_release.jenkins ]
 }
 
 resource "kubernetes_role_binding" "dev_role_binding" {

@@ -1,174 +1,96 @@
-# Cinema 3 - (Extremely Simplified) Example of Microservices in Python
+# Deployment Guide for Jenkins, Grafana, and Movie App on AWS
 
+This guide provides detailed steps to deploy a CI/CD system, monitoring, and application stack using Terraform, Helm, and Docker.
 
-Overview
-========
+---
 
-Cinema 3 is an example project which demonstrates the use of microservices for a fictional movie theater. 
-The Cinema 3 backend is powered by 4 microservices, all of which happen to be written in Python using 
-Flask.
+## Prerequisites
 
- * Movie Service: Provides information like movie ratings, title, etc.
- * Show Times Service: Provides show times information.
- * Booking Service: Provides booking information. 
- * Users Service: Provides movie suggestions for users by communicating with other services.
+Before starting, ensure the following tools are installed and configured:
 
-Requirements
-===========
+- **Terraform**: Infrastructure as Code tool.
+- **AWS CLI**: For managing AWS services.
+- **kubectl**: Kubernetes CLI tool.
+- **Helm**: Kubernetes package manager.
+- **Docker**: For containerizing and pushing images.
 
-* Python 2.7
-* Works on Linux, Windows, Mac OSX and (quite possibly) BSD.
+Also, ensure that AWS credentials are configured in your environment.
 
-Install
-=======
+---
 
-The quick way is use the provided `make` file.
+## Steps to Deploy the Infrastructure
 
-<code>
-$ make install
-</code>
+### 1. Create Infrastructure with Terraform
 
-Starting and Stopping Services
-==============================
+```bash
+# Navigate to the Terraform directory
+cd terraform
 
-To launch the services:
+# Initialize Terraform
+terraform init
 
-<code>
-$ make launch
-</code>
+# Apply the Terraform configuration to create all resources
+terraform apply -auto-approve
+```
+Terraform provisions the following resources:
+- **EKS Cluster**
+- **IAM Roles**
+- **VPC and Subnets**
+- **ECR Repos**
+- **Ingress Nginx**
+- **Jenkins**
 
-To stop the services: 
+### 2. Build and Push Docker Images to ECR
+```bash
+# Log in to AWS Elastic Container Registry (ECR)
+aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.<your-region>.amazonaws.com
 
-<code>
-$ make shutdown
-</code>
+# Build the Docker image
+docker build -t <your-ecr-repo-url>/jenkins:latest .
 
+# Push the Docker image to ECR
+docker push <your-ecr-repo-url>/jenkins:latest
+```
 
-APIs and Documentation
-======================
-
-## Movie Service (port 5001)
-
-This service is used to get information about a movie. It provides the movie title, rating on a 1-10 scale, 
-director and other information.
-
-To lookup all movies in the database, hit: `http://127.0.0.1:5001/movies`
-
-
-    GET /movies
-    Returns a list of all movies.
-    
-    {
-        "267eedb8-0f5d-42d5-8f43-72426b9fb3e6": {
-            "director": "Ryan Coogler", 
-            "id": "267eedb8-0f5d-42d5-8f43-72426b9fb3e6", 
-            "rating": 8.8, 
-            "title": "Creed"
-    }, 
-    ...... output truncated ...... 
-
-To lookup a movie by its `id`:
-
-    GET /movies/7daf7208-be4d-4944-a3ae-c1c2f516f3e6
-    Returns the specified movie.
-    
-    {
-        "director": "Paul McGuigan", 
-        "id": "7daf7208-be4d-4944-a3ae-c1c2f516f3e6", 
-        "rating": 6.4, 
-        "title": "Victor Frankenstein", 
-        "uri": "/movies/7daf7208-be4d-4944-a3ae-c1c2f516f3e6"
+### 3. Update the Jenkinsfile with Correct Values
+```groovy
+    environment {
+        ECR_REPO_URL = "<your-ecr-repo-url>"
     }
-    
-## Showtimes Service (port 5002)
+```
 
-This service is used get a list of movies playing on a certain date.
-
-To lookup all showtimes, hit: `http://127.0.0.1:5002/showtimes`
-
-
-    GET /showtimes
-    Returns a list of all showtimes by date.
-    
-    {
-    "20151130": [
-        "720d006c-3a57-4b6a-b18f-9b713b073f3c", 
-        "a8034f44-aee4-44cf-b32c-74cf452aaaae", 
-        "39ab85e5-5e8e-4dc5-afea-65dc368bd7ab"
-    ], 
-    ...... output truncated ...... 
-
-To get movies playing on a certain date:
-
-    GET /showtimes/20151201
-    Returns all movies playing on the date.
-
-    [
-        "267eedb8-0f5d-42d5-8f43-72426b9fb3e6", 
-        "7daf7208-be4d-4944-a3ae-c1c2f516f3e6", 
-        "39ab85e5-5e8e-4dc5-afea-65dc368bd7ab", 
-        "a8034f44-aee4-44cf-b32c-74cf452aaaae"
-    ]
-
-## Booking Service (port 5003)
-
-Used to lookup booking information for users.
-
-To get all bookings by all users in the system, hit: `http://127.0.0.1:5003/bookings`
-
-    GET /bookings
-    Returns a list of booking information for all bookings in the database.
-    
-    {
-        "chris_rivers": {
-            "20151201": [
-                "267eedb8-0f5d-42d5-8f43-72426b9fb3e6"
-            ]
-        }, 
-        ...... output truncated ...... 
-        
-To lookup booking information for a user:
-
-    GET /bookings/dwight_schrute
-    
-        {
-            "20151201": [
-                "7daf7208-be4d-4944-a3ae-c1c2f516f3e6", 
-                "267eedb8-0f5d-42d5-8f43-72426b9fb3e6"
-            ], 
-            "20151205": [
-                "a8034f44-aee4-44cf-b32c-74cf452aaaae", 
-                "276c79ec-a26a-40a6-b3d3-fb242a5947b6"
-            ]
+```yaml
+# Log in to AWS Elastic Container Registry (ECR)
+pipeline {
+    agent {
+        kubernetes {
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              labels:
+                some-label: some-value
+            spec:
+              containers:
+              - name: jnlp
+                image: <your-ecr-repo-url>:latest
+                args: ['\$(JENKINS_SECRET)', '\$(JENKINS_AGENT_NAME)']
+            """
         }
-
-## User Service (port 5000)
-
-This service returns information about the users of Cinema 3 and also provides movie suggestions to the 
-users. It communicates with other services to retrieve booking or movie information.
-
-To get a list of all the users in the system, hit: `http://127.0.0.1:5000/users`
-
-    GET /users
-    Returns a list of all users in the database.
-    
-    {
-        "chris_rivers": {
-            "id": "chris_rivers", 
-            "last_active": 1360031010, 
-            "name": "Chris Rivers"
-        }, 
-        ...... output truncated ...... 
-
-To lookup information about a user:
-
-    GET /users/michael_scott
-    {
-        "id": "michael_scott", 
-        "last_active": 1360031625, 
-        "name": "Michael Scott"
     }
-    
-To get suggested movies for a user:
+}
+```
 
-    GET /users/michael_scott/suggested
+### 4. Get the Load Balancer DNS Name
+```bash
+    # Get the value from the Ingress Resource
+    kubectl get ingress -n ingress-nginx
+```
+
+or use the AWS Management Console to get the DNS name of the Load Balancer
+
+### 5. Access the Applications
+Use the load balancer’s DNS name to access the deployed services:
+-	**Application: http://{load-balancer-dns-name}/movies**
+-	**Jenkins: http://{load-balancer-dns-name}/jenkins**
+-	**Grafana: http://{load-balancer-dns-name>}/grafana**

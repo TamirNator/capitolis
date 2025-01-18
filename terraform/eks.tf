@@ -21,7 +21,6 @@ module "eks" {
 
   eks_managed_node_group_defaults = {
     instance_types = ["t2.medium"]
-    key_name       = "cinema"
   }
   node_iam_role_additional_policies = {
     EKSPolicy = aws_iam_policy.eks_policy.arn
