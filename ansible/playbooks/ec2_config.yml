@@ -1,0 +1,9 @@
+---
+- name: Install Docker, Kubectl, and Helm on Amazon Linux 2
+  hosts: ec2_instances
+  become: true
+
+  roles:
+    - docker
+    - kubectl
+    - helm

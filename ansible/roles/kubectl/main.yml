@@ -1,0 +1,11 @@
+---
+- name: Download kubectl
+  get_url:
+    url: "https://amazon-eks.s3.us-west-2.amazonaws.com/{{ kubectl_version }}/2022-10-31/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: '0755'
+
+- name: Verify kubectl version
+  shell: "kubectl version --client"
+  register: kubectl_output
+  failed_when: kubectl_output.rc != 0
