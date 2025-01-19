@@ -68,6 +68,11 @@ resource "kubernetes_role" "dev_role" {
     resources  = ["deployments"]
     verbs      = ["get", "list", "watch", "create", "update", "patch", "delete"]
   }
+  rule {
+    api_groups = ["networking.k8s.io"]
+    resources  = ["ingresses"]
+    verbs      = ["get", "list", "watch", "create", "update", "patch", "delete"]
+  }
 }
 # Define the ClusterRole
 resource "kubernetes_cluster_role" "node_role" {

@@ -37,7 +37,7 @@ module "eks" {
       ami_type      = "AL2_x86_64"
       min_size = 3
       max_size = 10
-      desired_size = 3
+      desired_size = 4
       iam_role_additional_policies = {
         "EKSPolicy" = aws_iam_policy.eks_policy.arn
       }
@@ -77,6 +77,17 @@ EOT
       from_port   = 0
       to_port     = 0
       protocol    = "all"
+      type        = "ingress"
+    }
+  }
+
+  node_security_group_additional_rules = {
+    app_port = {
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "Allow traffic from all"
+      from_port   = 5001
+      to_port     = 5001
+      protocol    = "tcp"
       type        = "ingress"
     }
   }
